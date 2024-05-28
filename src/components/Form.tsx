@@ -1,47 +1,54 @@
-import { FormEvent, useState } from "react";
+import { FieldValues, useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const schema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 chars" }),
+  age: z
+    .number({ invalid_type_error: "Age field is required" })
+    .min(18, { message: "age must be at least 18" }),
+});
+
+type FormData = z.infer<typeof schema>;
 
 const Form = () => {
-  const [person, setPerson] = useState({
-    name: "",
-    age: 0,
-  });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    console.log(person);
-  };
+  const onSubmit = (data: FieldValues) => console.log(data);
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit(onSubmit)}>
       <div className="mb-3">
         <label htmlFor="name" className="form-label">
           Name
         </label>
         <input
-          onChange={(e) => setPerson({ ...person, name: e.target.value })}
+          {...register("name")}
           placeholder="name"
           id="name"
           type="text"
           className="form-control"
-          value={person.name}
         />
+        {errors.name && <p className="text-danger">{errors.name.message}</p>}
       </div>
       <div className="mb-3">
         <label htmlFor="age" className="form-label">
           Age
         </label>
         <input
-          onChange={(e) =>
-            setPerson({ ...person, age: parseInt(e.target.value) })
-          }
+          {...register("age", { valueAsNumber: true })}
           placeholder="age"
           id="age"
           type="number"
           className="form-control"
-          value={person.age}
         />
+        {errors.age && <p className="text-danger">{errors.age.message}</p>}
       </div>
-      <button type="submit" className="btn btn-primary">
+      <button disabled={!isValid} type="submit" className="btn btn-primary">
         Submit
       </button>
     </form>
