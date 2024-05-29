@@ -60,6 +60,21 @@ const App = () => {
     // .then((res) => setUsers([res.data, ...users]));
   };
 
+  const updateUser = (user: User) => {
+    const originalUsers = [...users];
+    const updatedUser = { ...user, name: user.name + "!" };
+    setUsers(users.map((u) => (u.id === user.id ? updatedUser : u)));
+
+    axios
+      .patch(
+        `https://jsonplaceholder.typicode.com/users/${(user.id, updateUser)}`
+      )
+      .catch((err) => {
+        setErr(err.message);
+        setUsers(originalUsers); //setting users to the original users on FAIL
+      });
+  };
+
   return (
     <>
       {err.length > 1 && <p className="text-danger">{err}</p>}
@@ -74,12 +89,20 @@ const App = () => {
             key={user.id}
           >
             {user.name}
-            <button
-              onClick={() => deleteUser(user)}
-              className="btn btn-outline-danger"
-            >
-              Delete
-            </button>
+            <div>
+              <button
+                onClick={() => updateUser(user)}
+                className="btn btn-outline-secondary me-2"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => deleteUser(user)}
+                className="btn btn-outline-danger"
+              >
+                Delete
+              </button>
+            </div>
           </li>
         ))}
       </ul>
