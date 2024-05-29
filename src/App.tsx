@@ -1,30 +1,8 @@
-import { useEffect, useState } from "react";
-import { CanceledError } from "./services/api-client";
 import userService, { User } from "./services/user-service";
+import useUsers from "./hooks/useUsers";
 
 const App = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [err, setErr] = useState("");
-  const [isLoading, setLoading] = useState(false);
-
-  useEffect(() => {
-    setLoading(true);
-    const { request, cancel } = userService.getAll<User>();
-    request
-      .then((res) => {
-        setUsers(res.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        if (err instanceof CanceledError) return;
-        setErr(err.message);
-        setLoading(false);
-      });
-    // .finally(() => {
-    //   setLoading(false);
-    // }); DOESNT WORK ONLY WITH STRICT MODE
-    return () => cancel();
-  }, []);
+  const { users, err, isLoading, setUsers, setErr } = useUsers();
 
   const deleteUser = (user: User) => {
     const originalUsers = [...users];
