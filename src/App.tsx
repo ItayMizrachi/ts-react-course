@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
-import apiClient, { CanceledError } from "./services/api-client";
-interface User {
-  id: number;
-  name: string;
-}
+import { CanceledError } from "./services/api-client";
+import userService, { User } from "./services/user-service";
 
 const App = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -11,13 +8,9 @@ const App = () => {
   const [isLoading, setLoading] = useState(false);
 
   useEffect(() => {
-    const controller = new AbortController();
-
     setLoading(true);
-    apiClient
-      .get<User[]>(`/users`, {
-        signal: controller.signal,
-      })
+    const { request, cancel } = userService.getAllUsers();
+    request
       .then((res) => {
         setUsers(res.data);
         setLoading(false);
@@ -30,14 +23,14 @@ const App = () => {
     // .finally(() => {
     //   setLoading(false);
     // }); DOESNT WORK ONLY WITH STRICT MODE
-    return () => controller.abort();
+    return () => cancel();
   }, []);
 
   const deleteUser = (user: User) => {
     const originalUsers = [...users];
     // in case delete fails , saving original users to display the deleted user again
     setUsers(users.filter((u) => u.id !== user.id));
-    apiClient.delete(`/users/${user.id}`).catch((err) => {
+    userService.deleteUser(user.id).catch((err) => {
       setErr(err.message);
       setUsers(originalUsers); //setting users to the original users on FAIL
     });
@@ -47,8 +40,8 @@ const App = () => {
     const originalUsers = [...users];
     const newUser = { id: 0, name: "Mosh" };
     setUsers([newUser, ...users]);
-    apiClient
-      .post(`/users`, newUser)
+    userService
+      .createUser(newUser)
       .then(({ data: savedUser }) => setUsers([savedUser, ...users]))
       .catch((err) => {
         setErr(err.message);
@@ -62,7 +55,7 @@ const App = () => {
     const updatedUser = { ...user, name: user.name + "!" };
     setUsers(users.map((u) => (u.id === user.id ? updatedUser : u)));
 
-    apiClient.patch(`/users/${(user.id, updateUser)}`).catch((err) => {
+    userService.updateUser(updatedUser).catch((err) => {
       setErr(err.message);
       setUsers(originalUsers); //setting users to the original users on FAIL
     });
